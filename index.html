@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Game</title>
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+            max-width: 300px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 36px;
+            text-align: center;
+        }
+
+        h2 {
+            margin: 5px 0 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        canvas {
+            border: 2px solid #fff;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: center;
+            margin: 5px 0;
+        }
+
+        .settings-panel {
+            background-color: #34495e;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            width: 250px;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .arrow-button {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            margin: 5px;
+        }
+
+        .color-preview {
+            width: 80px;
+            height: 25px;
+            border: 1px solid #fff;
+            margin-top: 5px;
+        }
+
+        label {
+            margin-top: 8px;
+            display: block;
+        }
+
+        input[type="text"], input[type="color"] {
+            width: calc(100% - 10px);
+            padding: 4px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 12px;
+            display: none;
+        }
+
+        .guide {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #34495e;
+            border-radius: 5px;
+            max-width: 300px;
+            text-align: left;
+        }
+
+        h3 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <h1>Tetris</h1>
+        <h2>Made by @isaaclau888</h2>
+        
+        <div class="guide">
+            <h3>How to Play</h3>
+            <p><strong>Objective:</strong> Clear horizontal lines by fitting falling blocks (Tetriminos).</p>
+            <p><strong>Controls:</strong></p>
+            <ul>
+                <li><strong>A:</strong> Move Left</li>
+                <li><strong>D:</strong> Move Right</li>
+                <li><strong>W:</strong> Rotate</li>
+                <li><strong>S:</strong> Drop</li>
+            </ul>
+            <p><strong>Start:</strong> Click "Start Game".</p>
+            <p><strong>Game Over:</strong> When blocks reach the top.</p>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="tetris" width="240" height="400"></canvas>
+        <div>
+            <button id="start-button">Start Game</button>
+            <button id="reset-button">Reset Game</button>
+            <button id="open-settings" onclick="toggleSettings()">Open Settings</button>
+            <div id="score">Score: 0</div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-row">
+                <button class="arrow-button" onclick="move(-1)">←</button>
+                <button class="arrow-button" onclick="rotate(player.matrix)">↑</button>
+                <button class="arrow-button" onclick="move(1)">→</button>
+            </div>
+            <button class="arrow-button" onclick="drop()">↓</button>
+        </div>
+
+        <div id="settings-panel" class="settings-panel">
+            <h2 style="font-size: 16px;">Settings</h2>
+            <label for="background-color">BG Color:</label>
+            <input type="color" id="background-color" value="#000000" onchange="updateBackgroundColor()">
+            <div class="color-preview" id="color-preview" style="background-color: #000000;"></div>
+            <label for="background-image-url">Image URL:</label>
+            <input type="text" id="background-image-url" placeholder="Image URL" onchange="updateBackgroundImage()">
+            <label for="background-image-size">Image Size:</label>
+            <input type="text" id="background-image-size" placeholder="e.g. 100% 100%" onchange="updateBackgroundImageSize()">
+            <div class="error" id="size-error">Invalid size format.</div>
+            <h3>Controls</h3>
+            <label for="move-left">Left:</label>
+            <input type="text" id="move-left" value="A" onchange="updateControls()">
+            <label for="move-right">Right:</label>
+            <input type="text" id="move-right" value="D" onchange="updateControls()">
+            <label for="drop">Drop:</label>
+            <input type="text" id="drop" value="S" onchange="updateControls()">
+            <label for="rotate">Rotate:</label>
+            <input type="text" id="rotate" value="W" onchange="updateControls()">
+            <button id="save-settings">Save</button>
+            <button class="close-button" onclick="toggleSettings()">Close</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        context.scale(20, 20); // Scale the canvas for easier drawing
+
+        const colors = [null, 'cyan', 'blue', 'orange', 'yellow', 'green', 'purple', 'red'];
+        const pieces = 'ijlostz';
+        let board = Array.from({ length: 20 }, () => Array(12).fill(0));
+        let player = { pos: { x: 0, y: 0 }, matrix: null };
+        let score = 0;
+        let dropInterval = 1000;
+        let dropTime = 0;
+        let gameActive = false;
+        let gameOver = false;
+
+        function createMatrix(w, h) {
+            return Array.from({ length: h }, () => Array(w).fill(0));
+        }
+
+        function createPiece(type) {
+            const piecesMap = {
+                't': [[0, 5, 0], [5, 5, 5], [0, 0, 0]],
+                'o': [[4, 4], [4, 4]],
+                'l': [[0, 6, 0], [0, 6, 0], [0, 6, 6]],
+                'j': [[0, 7, 0], [0, 7, 0], [7, 7, 0]],
+                'i': [[0, 0, 0, 0], [8, 8, 8, 8]],
+                's': [[0, 9, 9], [9, 9, 0]],
+                'z': [[10, 10, 0], [0, 10, 10]],
+            };
+            return piecesMap[type];
+        }
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function collide(area, player) {
+            const { matrix, pos } = player;
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < matrix[y].length; ++x) {
+                    if (matrix[y][x] !== 0 && (area[y + pos.y] && area[y + pos.y][x + pos.x]) !== 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function merge(area, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        area[y + player.pos.y][x + player.pos.x] = value;
+                    }
+                });
+            });
+        }
+
+        function rotate(matrix) {
+            const originalMatrix = matrix.map(row => row.slice());
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            matrix.forEach(row => row.reverse());
+
+            if (collide(board, player)) {
+                for (let y = 0; y < originalMatrix.length; ++y) {
+                    for (let x = 0; x < originalMatrix[y].length; ++x) {
+                        matrix[y][x] = originalMatrix[y][x];
+                    }
+                }
+            }
+        }
+
+        function drawGhost() {
+            let ghostY = player.pos.y;
+            while (!collide(board, { matrix: player.matrix, pos: { x: player.pos.x, y: ghostY + 1 } })) {
+                ghostY++;
+            }
+            drawMatrix(player.matrix, { x: player.pos.x, y: ghostY });
+        }
+
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = 'black';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(board, { x: 0, y: 0 });
+            drawGhost();
+            drawMatrix(player.matrix, player.pos);
+            document.getElementById('score').textContent = 'Score: ' + score;
+        }
+
+        function playerReset() {
+            const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+            player.matrix = createPiece(randomPiece);
+            player.pos.y = 0;
+            player.pos.x = Math.floor((board[0].length / 2) - (player.matrix[0].length / 2));
+
+            if (collide(board, player)) {
+                gameActive = false;
+                gameOver = true;
+                alert("Game Over! Your score: " + score);
+                resetGame();
+            }
+        }
+
+        function update() {
+            draw();
+            drop();
+            if (gameActive) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        function drop() {
+            dropTime++;
+            if (dropTime > dropInterval / 100) {
+                player.pos.y++;
+                if (collide(board, player)) {
+                    player.pos.y--;
+                    merge(board, player);
+                    updateScore();
+                    playerReset();
+                }
+                dropTime = 0;
+            }
+        }
+
+        function updateScore() {
+            let linesCleared = 0;
+            for (let y = board.length - 1; y >= 0; --y) {
+                if (board[y].every(value => value !== 0)) {
+                    board.splice(y, 1);
+                    board.unshift(new Array(12).fill(0));
+                    linesCleared++;
+                }
+            }
+            if (linesCleared > 0) {
+                score += linesCleared * 10;
+            }
+        }
+
+        function move(dir) {
+            player.pos.x += dir;
+            if (collide(board, player)) {
+                player.pos.x -= dir;
+            }
+        }
+
+        function control(event) {
+            if (!gameActive) return;
+            switch (event.key.toLowerCase()) {
+                case 'a':
+                    move(-1);
+                    break;
+                case 'd':
+                    move(1);
+                    break;
+                case 's':
+                    player.pos.y++;
+                    if (collide(board, player)) {
+                        player.pos.y--;
+                        merge(board, player);
+                        updateScore();
+                        playerReset();
+                    }
+                    break;
+                case 'w':
+                    rotate(player.matrix);
+                    break;
+            }
+        }
+
+        document.getElementById('start-button').addEventListener('click', function() {
+            if (!gameActive) {
+                board = createMatrix(12, 20);
+                score = 0;
+                playerReset();
+                gameActive = true;
+                document.addEventListener('keydown', control);
+                update();
+            }
+        });
+
+        document.getElementById('reset-button').addEventListener('click', resetGame);
+
+        function resetGame() {
+            score = 0;
+            board = createMatrix(12, 20);
+            playerReset();
+            draw();
+        }
+
+        function toggleSettings() {
+            const settingsPanel = document.getElementById('settings-panel');
+            settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateBackgroundColor() {
+            const color = document.getElementById('background-color').value;
+            document.body.style.backgroundColor = color;
+            document.getElementById('color-preview').style.backgroundColor = color;
+        }
+
+        function updateBackgroundImage() {
+            const url = document.getElementById('background-image-url').value;
+            if (url) document.body.style.backgroundImage = `url('${url}')`;
+        }
+
+        function updateBackgroundImageSize() {
+            const size = document.getElementById('background-image-size').value;
+            const errorElement = document.getElementById('size-error');
+            if (/^\d+(px|%|em)?\s\d+(px|%|em)?$/.test(size)) {
+                document.body.style.backgroundSize = size;
+                errorElement.style.display = 'none';
+            } else {
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function updateControls() {
+            // Logic to update controls can be added here
+        }
+    </script>
+</body>
+</html>
